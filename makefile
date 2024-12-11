@@ -32,3 +32,8 @@ swagger:
 lint:
 	CGO_ENABLED=0 go vet ./...
 	staticcheck -checks=all ./...
+
+test:
+	go test -covermode=count -coverprofile coverage \
+    $$( go list ./business/core/dragon-ball/character ) && \
+    go tool cover -html=coverage

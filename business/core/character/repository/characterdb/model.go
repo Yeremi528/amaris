@@ -1,6 +1,8 @@
 package characterdb
 
-import "dragonball/business/core/character"
+import (
+	"dragonball/business/core/character"
+)
 
 type dbCharacter struct {
 	ID    int    `db:"ID"`

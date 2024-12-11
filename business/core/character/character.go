@@ -3,11 +3,12 @@ package character
 import (
 	"context"
 	dragonball "dragonball/business/core/dragon-ball"
-	"dragonball/business/core/dragon-ball/character"
+	characterService "dragonball/business/core/dragon-ball/character"
 	v1 "dragonball/business/web/v1"
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 const empty = ""
@@ -31,25 +32,35 @@ func New(repository Repository, dbCore *dragonball.Core) *Core {
 }
 
 func (c *Core) QueryByName(ctx context.Context, name string) (Character, error) {
-	characterDB, err := c.repository.QueryByName(ctx, name)
+	var character Character
+
+	character, err := c.repository.QueryByName(ctx, name)
 	if err != nil {
 		return Character{}, fmt.Errorf("character.Query: Query.QueryByName: %w", err)
 	}
 
-	if characterDB.Name != empty {
-		return characterDB, nil
+	name = strings.TrimSpace(name)
+	nameURL := formatName(name)
+
+	if character.Name != empty {
+		return character, nil
 	}
 
-	characterSv, err := character.Run(ctx, c.dragonBallCore, name)
+	characterArr, err := characterService.Run(ctx, c.dragonBallCore, nameURL)
 	if err != nil {
+		fmt.Println(err, "error")
 		return Character{}, fmt.Errorf("character.Query: character.Run: %w", err)
 	}
 
-	if characterSv[0].Name == empty {
+	if characterArr == nil {
 		return Character{}, v1.NewRequestError(errors.New("character not found"), http.StatusBadRequest)
 	}
 
-	characterFormated := formatCharacter(characterSv[0])
+	characterFormated := formatCharacter(characterArr, name)
+
+	if characterFormated.Name == empty {
+		return Character{}, fmt.Errorf("character not found: %w", err)
+	}
 
 	if err := c.repository.Save(ctx, characterFormated); err != nil {
 		return Character{}, fmt.Errorf("character.Query: repository.Save: %w", err)
