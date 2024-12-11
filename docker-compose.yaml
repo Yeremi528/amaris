@@ -1,0 +1,41 @@
+version: '2'
+services:
+  servicedb-go-ms-dragon-ball:
+    image: postgres:14.12
+    restart: always
+    container_name: go-ms-dragon-ball-db
+    ports:
+      - "4002:5432"
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+      - ./init_db_local.sql:/docker-entrypoint-initdb.d/init_db_local.sql
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+ 
+  # Servicio para tu aplicación
+  app-go-ms-dragon-ball:
+    build:
+      context: . # Ruta donde se encuentra el Dockerfile
+      dockerfile: Dockerfile
+    restart: always
+    container_name: go-ms-dragon-ball-app
+    environment:
+      DB_HOST: servicedb-go-ms-dragon-ball
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: dragon_ball
+    depends_on:
+      servicedb-go-ms-dragon-ball:
+        condition: service_healthy
+    ports:
+      - "8080:8080" # Puerto externo:interno
+
+

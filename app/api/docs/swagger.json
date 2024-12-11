@@ -1,0 +1,133 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is documentation for the SPENDING LINE API.",
+        "title": "Spending Line API",
+        "contact": {},
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "basePath": "/spending-line",
+    "paths": {
+        "/v1/balance": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Pocket"
+                ],
+                "summary": "Consult Balance",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The type of balance",
+                        "name": "type",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/spendinggrp.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Some validation has jumped",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "No records found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "409": {
+                        "description": "The request could not be processed due to a request conflict",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "response.Error": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "securityToken": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                },
+                "traceID": {
+                    "type": "string"
+                }
+            }
+        },
+        "spendinggrp.Response": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "traceID": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "DeviceID": {
+            "description": "Unique identifier for the device",
+            "type": "apiKey",
+            "name": "device-id",
+            "in": "header"
+        },
+        "JWT": {
+            "description": "JWT Token for API authentication",
+            "type": "apiKey",
+            "name": "jwt-token",
+            "in": "header"
+        },
+        "SecurityToken": {
+            "description": "Security Token for API authentication",
+            "type": "apiKey",
+            "name": "x-security-token",
+            "in": "header"
+        }
+    },
+    "security": [
+        {
+            "JWT, DeviceID, SecurityToken": []
+        }
+    ]
+}

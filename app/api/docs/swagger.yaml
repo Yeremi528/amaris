@@ -1,0 +1,89 @@
+basePath: /spending-line
+definitions:
+  response.Error:
+    properties:
+      message:
+        type: string
+      securityToken:
+        type: string
+      success:
+        type: boolean
+      traceID:
+        type: string
+    type: object
+  spendinggrp.Response:
+    properties:
+      data: {}
+      message:
+        type: string
+      traceID:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: This is documentation for the SPENDING LINE API.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Spending Line API
+  version: "1.0"
+paths:
+  /v1/balance:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: The type of balance
+        in: query
+        name: type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/spendinggrp.Response'
+        "400":
+          description: Some validation has jumped
+          schema:
+            $ref: '#/definitions/response.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: No records found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "409":
+          description: The request could not be processed due to a request conflict
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Consult Balance
+      tags:
+      - Pocket
+security:
+- JWT, DeviceID, SecurityToken: []
+securityDefinitions:
+  DeviceID:
+    description: Unique identifier for the device
+    in: header
+    name: device-id
+    type: apiKey
+  JWT:
+    description: JWT Token for API authentication
+    in: header
+    name: jwt-token
+    type: apiKey
+  SecurityToken:
+    description: Security Token for API authentication
+    in: header
+    name: x-security-token
+    type: apiKey
+swagger: "2.0"

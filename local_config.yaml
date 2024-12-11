@@ -1,0 +1,18 @@
+postgres:
+  port: 4002
+  host: localhost
+  user: postgres
+  password: postgres
+  name: postgres
+  maxIdleConns: 2
+  connMaxIdleTime: 30s
+  maxOpenConns: 2
+  enableTLS: false
+  serverCA: |
+    PEM_KEY_CONTENT
+  clientCert: |
+    PEM_KEY_CONTENT
+  clientKey: |
+    PEM_KEY_CONTENT
+services:
+  
