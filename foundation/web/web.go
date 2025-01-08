@@ -7,10 +7,11 @@ import (
 	"net/http"
 	"os"
 	"syscall"
-	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Handler handles an http request.
@@ -21,16 +22,18 @@ type App struct {
 	*chi.Mux
 	shutdown chan os.Signal
 	mw       []Middleware
+	tracer   trace.Tracer
 }
 
 // NewApp returns an App value that handles a set of routes for the app.
-func NewApp(shutdown chan os.Signal, mw ...Middleware) *App {
+func NewApp(shutdown chan os.Signal, tracer trace.Tracer, mw ...Middleware) *App {
 	mux := chi.NewMux()
 
 	return &App{
 		Mux:      mux,
 		shutdown: shutdown,
 		mw:       mw,
+		tracer:   tracer,
 	}
 }
 
@@ -67,8 +70,8 @@ func (a *App) handle(method, group, path string, handler Handler) {
 	h := func(w http.ResponseWriter, r *http.Request) {
 
 		// set trace id and init time for the incoming request.
-		v := Values{TraceID: uuid.NewString(), Now: time.Now().UTC()}
-		ctx := context.WithValue(r.Context(), ctxKey, &v)
+		ctx := setTracer(r.Context(), a.tracer)
+		otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(w.Header()))
 
 		if err := handler(ctx, w, r); err != nil {
 			if validateShutdown(err) {

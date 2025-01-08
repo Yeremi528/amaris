@@ -3,6 +3,8 @@ package web
 import (
 	"context"
 	"time"
+
+	"go.opentelemetry.io/otel/trace"
 )
 
 type contextKey int
@@ -154,4 +156,9 @@ func SetToken(ctx context.Context, token string) {
 
 	v.Token = token
 
+}
+
+// ////////////////////
+func setTracer(ctx context.Context, tracer trace.Tracer) context.Context {
+	return context.WithValue(ctx, ctxKey, tracer)
 }

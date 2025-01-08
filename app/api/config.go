@@ -9,6 +9,7 @@ type Config struct {
 	Debug      DebugConfig
 	Postgres   PostgresConfig
 	DragonBall DragonBallConfig
+	Otel       OtelConfig
 }
 
 type WebConfig struct {
@@ -43,4 +44,10 @@ type DragonBallConfig struct {
 	RetryCount       int           `conf:"default:3"`
 	RetryMaxWaitTime time.Duration `conf:"default:3s"`
 	Timeout          time.Duration `conf:"default:10s"`
+}
+
+type OtelConfig struct {
+	Host        string  `conf:"default:0.0.0.0:4312"`
+	ServiceName string  `conf:"default:amaris"`
+	Probability float64 `conf:"default:90"`
 }

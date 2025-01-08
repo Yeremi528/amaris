@@ -1,0 +1,24 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:  # Recibe datos OTLP/gRPC
+        endpoint: 0.0.0.0:4312
+
+
+exporters:
+  otlp:
+    endpoint: jaeger:4317  # Puerto ajustado para OTLP/gRPC en Jaeger
+    tls:
+      insecure: true
+
+
+processors:
+  batch:  # Procesamiento recomendado para agrupar y optimizar el envío
+    timeout: 5s
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp]

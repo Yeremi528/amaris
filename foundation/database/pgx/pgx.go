@@ -14,6 +14,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
+	"github.com/uptrace/opentelemetry-go-extra/otelsqlx"
 )
 
 const (
@@ -75,11 +76,11 @@ func Open(cfg Config) (*sqlx.DB, error) {
 		Path:     cfg.Name,
 		RawQuery: q.Encode(),
 	}
-
-	db, err := sqlx.Open("pgx", u.String())
+	db, err := otelsqlx.Open("pgx", u.String())
 	if err != nil {
 		return nil, err
 	}
+
 	db.SetMaxIdleConns(cfg.MaxIdleConns)
 	db.SetMaxOpenConns(cfg.MaxOpenConns)
 	db.SetConnMaxIdleTime(cfg.IdleConnTimeout)

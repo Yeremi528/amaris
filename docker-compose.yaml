@@ -1,5 +1,7 @@
-version: '2'
+version: '3.8'
+
 services:
+  # Base de datos PostgreSQL
   servicedb-go-ms-dragon-ball:
     image: postgres:14.12
     restart: always
@@ -12,14 +14,13 @@ services:
     volumes:
       - ./postgres:/var/lib/postgresql/data
       - ./init_db_local.sql:/docker-entrypoint-initdb.d/init_db_local.sql
-
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
- 
-  # Servicio para tu aplicación
+
+  # Tu aplicación Go
   app-go-ms-dragon-ball:
     build:
       context: . # Ruta donde se encuentra el Dockerfile
@@ -32,10 +33,40 @@ services:
       DB_USER: postgres
       DB_PASSWORD: postgres
       DB_NAME: dragon_ball
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
     depends_on:
       servicedb-go-ms-dragon-ball:
         condition: service_healthy
     ports:
-      - "8080:8080" # Puerto externo:interno
+      - "8080:8080"
+
+  # OpenTelemetry Collector
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    container_name: otel-collector
+    command: ["--config=/etc/otel-collector-config.yml"]
+    volumes:
+      - ./otel-collector-config.yml:/etc/otel-collector-config.yml
+    ports:
+      - "4312:4312"
+    depends_on:
+      - jaeger
+
+  # Jaeger para visualización
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "16686:16686"  # UI
+      - "6831:6831/udp"  # UDP para agentes
+      - "6832:6832/udp"  # UDP para agentes (opcional, pero recomendado)
+      - "14268:14268"  # Thrift HTTP para traces
+      - "14250:14250"  # gRPC
+      - "4317:4317"  # OTLP/gRPC (nuevo)
+      - "4318:4318"  # OTLP/HTTP (nuevo)
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true  # Habilita OTLP en Jaeger
+      - COLLECTOR_OTLP_GRPC_PORT=4317  # Puerto para OTLP/gRPC
+      - COLLECTOR_OTLP_HTTP_PORT=4318  # Puerto para OTLP/HTTP
 
 

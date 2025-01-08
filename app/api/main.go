@@ -7,8 +7,12 @@ import (
 	"dragonball/foundation/database/pgx"
 	"dragonball/foundation/debug"
 	"dragonball/foundation/logger"
+	"dragonball/foundation/otel"
 	"dragonball/foundation/web"
 	"errors"
+
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+
 	"fmt"
 	"net/http"
 	"os"
@@ -149,6 +153,24 @@ func run(ctx context.Context, log *logger.Logger) error {
 	}
 
 	/*==========================================================================
+		Start Tracing Support
+	==========================================================================*/
+
+	traceProvider, teardown, err := otel.InitTracing(log, otel.Config{
+		ServiceName: cfg.Otel.ServiceName,
+		Host:        cfg.Otel.Host,
+		Probability: cfg.Otel.Probability,
+	})
+
+	if err != nil {
+		return fmt.Errorf("starting tracing: %w", err)
+	}
+
+	defer teardown(context.Background())
+
+	tracer := traceProvider.Tracer(cfg.Debug.APIHost)
+
+	/*==========================================================================
 		Debug Service
 	==========================================================================*/
 
@@ -184,12 +206,13 @@ func run(ctx context.Context, log *logger.Logger) error {
 			Log:            log,
 			DB:             db,
 			DragonBallCore: dragonBallCore,
+			Tracer:         tracer,
 		},
 	)
 
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
-		Handler:      apiMux,
+		Handler:      otelhttp.NewHandler(apiMux, "http-server"),
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 		IdleTimeout:  cfg.Web.IdleTimeout,
